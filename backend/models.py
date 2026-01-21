@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text,Boolean
 from sqlalchemy.sql import func
 
-from db import Base
+from backend.db import Base
 
 
 class Receipt(Base):
@@ -32,3 +32,8 @@ class Receipt(Base):
         DateTime(timezone=True),
         server_default=func.now()
     )
+
+    #evaluation layer 
+    review_status = Column(String, default="pending")  
+    reviewed_by_human = Column(Boolean, default=False)
+    review_comments = Column(Text, nullable=True)

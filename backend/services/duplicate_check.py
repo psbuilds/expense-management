@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
 
-from models import Receipt
+from backend.models import Receipt
 
 
 def is_duplicate_receipt(

@@ -1,8 +1,11 @@
 import re
+import os
+import json
 from typing import Optional, Tuple
+from groq import Groq
 
-CONFIDENCE_THRESHOLD = 2.0          # minimum rule score to accept
-MAX_RULE_SCORE = 5.0                # used to normalize confidence
+CONFIDENCE_THRESHOLD = 2.0
+MAX_RULE_SCORE = 5.0
 
 VENDOR_OVERRIDES = {
     "swiggy": "Food",
@@ -12,7 +15,6 @@ VENDOR_OVERRIDES = {
     "amazon": "Shopping",
     "flipkart": "Shopping"
 }
-
 
 CATEGORY_RULES = {
     "Food": {
@@ -34,7 +36,7 @@ CATEGORY_RULES = {
             "flight": 3.0,
             "train": 2.0,
             "bus": 1.5,
-            "ksrtc":1.5
+            "ksrtc": 1.5
         }
     },
     "Shopping": {
@@ -58,6 +60,9 @@ CATEGORY_RULES = {
     }
 }
 
+ALLOWED_CATEGORIES = list(CATEGORY_RULES.keys())
+
+
 def normalize_text(text: str) -> str:
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
@@ -68,22 +73,61 @@ def match_keywords(text: str, keyword: str) -> bool:
     pattern = rf"\b{re.escape(keyword)}\b"
     return re.search(pattern, text) is not None
 
+
+def llm_categorize(text: str) -> Tuple[Optional[str], float]:
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+    prompt = f"""
+You are an expense categorization system.
+
+IMPORTANT:
+- Uber/Ola/Taxi/Bus/Train → Travel
+- Swiggy/Zomato → Food
+- Amazon/Flipkart → Shopping
+
+Allowed categories:
+{ALLOWED_CATEGORIES}
+
+OCR Text:
+{text}
+
+Return ONLY JSON:
+{{
+  "category": "<category or null>",
+  "confidence": <0-1>
+}}
+"""
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "system", "content": "Return JSON only."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.0,
+        max_tokens=200
+    )
+
+    try:
+        parsed = json.loads(response.choices[0].message.content)
+        return parsed.get("category"), float(parsed.get("confidence", 0.0))
+    except Exception:
+        return None, 0.0
+
+
 def categorize_text(text: str) -> Tuple[Optional[str], Optional[float], str]:
-    """
-    Returns:
-        category (str | None)
-        confidence (float | None)  # 0.0 – 1.0
-        categorization_method ("rule" | "llm")
-    """
 
     if not text or not text.strip():
         return None, None, "llm"
 
-    text = normalize_text(text)
+    raw_text = text.lower()
 
+    # 🔒 HARD vendor override
     for vendor, category in VENDOR_OVERRIDES.items():
-        if vendor in text:
+        if vendor in raw_text:
             return category, 1.0, "rule"
+
+    text = normalize_text(text)
 
     scores = {}
 
@@ -92,25 +136,22 @@ def categorize_text(text: str) -> Tuple[Optional[str], Optional[float], str]:
         for keyword, weight in rule_data["keywords"].items():
             if match_keywords(text, keyword):
                 score += weight
-
         if score > 0:
             scores[category] = score
 
-    if not scores:
-        return None, None, "llm"
+    if scores:
+        best_category = max(scores, key=scores.get)
+        best_score = scores[best_category]
 
-    best_category = max(scores, key=scores.get)
-    best_score = scores[best_category]
+        if best_score >= CONFIDENCE_THRESHOLD:
+            confidence = min(best_score / MAX_RULE_SCORE, 1.0)
+            if len(text) < 40:
+                confidence -= 0.15
+            return best_category, round(max(confidence, 0.0), 2), "rule"
 
-    if best_score < CONFIDENCE_THRESHOLD:
-        return None, None, "llm"
+    llm_category, llm_confidence = llm_categorize(text)
 
-    confidence = min(best_score / MAX_RULE_SCORE, 1.0)
+    if llm_category in ALLOWED_CATEGORIES:
+        return llm_category, round(llm_confidence, 2), "llm"
 
-    # Penalize very short OCR text (low signal quality)
-    if len(text) < 40:
-        confidence -= 0.15
-
-    confidence = max(0.0, round(confidence, 2))
-
-    return best_category, confidence, "rule"
+    return None, None, "llm"
