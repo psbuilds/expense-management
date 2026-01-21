@@ -108,5 +108,23 @@ The system follows a tiered approach:
 2. **Keyword Rules**: Scans OCR text for specific identifiers with a confidence score.
 3. **LLM Fallback**: If rules are insufficient, the text is sent to Llama-3 (via Groq) for intelligent classification.
 
+## 📊 Evaluation Framework
+
+The project includes a robust, multi-layered evaluation suite (located in `/evaluation`) to ensure OCR and categorization accuracy.
+
+### Layer 1: Automated Metrics
+- **Text Metrics**: Character and word-level accuracy (using Levenshtein distance).
+- **Field Metrics**: Exact match checks for Vendor, Currency, and Date (with tolerance).
+- **Numeric Metrics**: Calculates the absolute error in extracted amounts.
+
+### Layer 2: LLM as a Judge
+- Uses a "Golden" LLM (Llama-3 via Groq) to perform a **semantic match**.
+- Judges whether the OCR output is functionally correct, even if the raw text has minor artifacts.
+- Provides a confidence score and flags specific missing fields.
+
+### Layer 3: Human-in-the-Loop
+- Allows for manual review (`review_status`) and overrides.
+- Final validation step to verify system predictions against ground truth.
+
 ---
 *Built for the Expense Receipt AI Project.*

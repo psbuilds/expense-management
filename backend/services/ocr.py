@@ -1,20 +1,21 @@
-import os
-import io
 from PIL import Image
 import pytesseract
+import io
+from fastapi import UploadFile
 
 
-def extract_text_from_image(image_bytes: bytes) -> str:
+def extract_text_from_image(file: UploadFile) -> str:
     """
-    Extract text from an image using Tesseract OCR.
-    Tesseract path is read from environment if provided.
+    Extract text from an uploaded image using Tesseract OCR.
     """
-    tesseract_cmd = os.getenv("TESSERACT_CMD")
-    if tesseract_cmd:
-        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
+    # Read raw bytes from UploadFile
+    image_bytes = file.file.read()
+
+    # Convert bytes to PIL Image
     image = Image.open(io.BytesIO(image_bytes))
-    image = image.convert("L")
+
+    # Run OCR
     text = pytesseract.image_to_string(image)
 
     return text.strip()
