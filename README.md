@@ -1,39 +1,33 @@
-# 🚀 Expense Receipt AI - Backend
+# 🚀 Expense Receipt AI
 
-The backend engine for **Expense Receipt AI**, a powerful system designed to automate expense tracking using OCR and Intelligent Categorization.
+A powerful system designed to automate expense tracking using OCR (Tesseract) and Intelligent Categorization (Llama 3.1). This project consists of a **FastAPI Backend** and a **Streamlit Frontend**.
 
 ## 🌟 Features
 
-- **OCR Extraction**: Automatically extracts text from receipt images using Tesseract OCR.
-- **Hybrid Categorization**:
-  - **Rule-based**: High-speed matching for known vendors and keywords.
-  - **LLM-powered**: Advanced categorization using Groq (Llama-3) for complex or unknown receipts.
-- **Duplicate Detection**: Smart check to prevent double-entry of expenses based on amount, vendor, and date.
-- **Evaluation Ready**: Built-in hooks for accuracy testing and human-in-the-loop review.
+- **Automated Text Extraction**: Extracts text from receipt images using OCR.
+- **Smart Categorization**: A hybrid approach using rule-based logic and LLM-powered (Groq/Llama-3) classification.
+- **Interactive Web UI**: A clean, modern interface built with Streamlit for uploading receipts and viewing results.
+- **Duplicate Detection**: Smart check to prevent double-entry of expenses.
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (High-performance Python web framework)
-- **Database**: SQLite with [SQLAlchemy](https://www.sqlalchemy.org/) ORM
-- **Validation**: [Pydantic](https://docs.pydantic.dev/) for data schemas
+- **Backend**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
+- **Frontend**: [Streamlit](https://streamlit.io/) (Data app framework)
+- **Database**: SQLite with [SQLAlchemy](https://www.sqlalchemy.org/)
 - **OCR Engine**: [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
 - **AI Engine**: [Groq Cloud](https://groq.com/) (Llama 3.1 8B)
 
 ## 📁 Directory Structure
 
 ```text
-backend/
-├── main.py          # Application entry point & route registration
-├── models.py        # SQLAlchemy database models
-├── schemas.py       # Pydantic data schemas for API requests/responses
-├── db.py            # Database connection and session management
-├── routes/          # API endpoint definitions
-│   └── receipts.py  # Receipt processing and upload routes
-├── services/        # Core business logic
-│   ├── ocr.py            # Image processing and text extraction
-│   ├── categorization.py # Hybrid rule/LLM categorization logic
-│   └── duplicate_check.py # Receipt deduplication logic
-└── utils/           # Helper functions (Image processing, etc.)
+├── backend/            # FastAPI Backend
+│   ├── main.py         # Application entry point
+│   ├── models.py       # Database models
+│   ├── routes/         # API endpoints
+│   └── services/       # OCR & Categorization logic
+├── frontend/           # Streamlit Frontend
+│   └── app.py          # Main frontend application
+└── data/               # Local database & storage
 ```
 
 ## ⚙️ Setup & Installation
@@ -43,36 +37,45 @@ backend/
 - Python 3.8+
 - [Tesseract OCR](https://tesseract-ocr.github.io/tessdoc/Installation.html) installed on your system.
 
-### Environment Variables
-
-Create a `.env` file in the root directory or set these variables in your shell:
-
-```bash
-# Required for AI categorization
-export GROQ_API_KEY="your_groq_api_key_here"
-
-# Optional: Path to Tesseract executable (if not in PATH)
-export TESSERACT_CMD="/usr/local/bin/tesseract"
-```
-
 ### Installation
 
-1.  **Create a virtual environment**:
+1.  **Clone the repository and enter directory**:
+    ```bash
+    cd expense-receipt-ai
+    ```
+
+2.  **Create a virtual environment**:
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     ```
 
-2.  **Install dependencies**:
+3.  **Install dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Run the server**:
+4.  **Configure environment variables**:
+    Create a `.env` file in the root directory:
     ```bash
-    uvicorn backend.main:app --reload
+    GROQ_API_KEY="your_groq_api_key_here"
     ```
-    The API will be available at `http://127.0.0.1:8000`.
+
+### 🚀 Running the Application
+
+To run the full application, you need to start both the backend and frontend in separate terminals.
+
+#### Terminal 1: Backend Server
+```bash
+python -m uvicorn backend.main:app --reload
+```
+The FastAPI server will start at `http://127.0.0.1:8000`.
+
+#### Terminal 2: Frontend App
+```bash
+streamlit run frontend/app.py
+```
+The Streamlit interface will open in your browser (usually at `http://127.0.0.1:8501`).
 
 ## 🔌 API Documentation
 

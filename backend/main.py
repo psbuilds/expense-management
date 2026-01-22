@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from backend.db import Base, engine
 from backend.routes import receipts
 import backend.models  # important
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = FastAPI()
 

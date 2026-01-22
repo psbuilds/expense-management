@@ -18,7 +18,7 @@ def upload_receipt(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    # OCR
+    #  OCR
     ocr_text = extract_text_from_image(file)
 
     # Categorization
@@ -35,7 +35,7 @@ def upload_receipt(
 
     status = "flagged" if is_duplicate else "approved"
 
-    # 4️⃣ Save to DB
+    #  Save to DB
     receipt = Receipt(
         user_id=1,
         raw_ocr_text=ocr_text,
