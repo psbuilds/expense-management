@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text,Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text,Boolean,JSON
 from sqlalchemy.sql import func
 
 from backend.db import Base
@@ -34,6 +34,7 @@ class Receipt(Base):
     )
 
     #evaluation layer 
-    review_status = Column(String, default="pending")  
+    review_status = Column(String, default="pending")
     reviewed_by_human = Column(Boolean, default=False)
-    review_comments = Column(Text, nullable=True)
+    human_reviewer_id = Column(String, nullable=True)
+    corrected_fields = Column(JSON, nullable=True)

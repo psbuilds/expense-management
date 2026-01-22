@@ -1,17 +1,25 @@
 from fastapi import FastAPI
-from backend.db import Base, engine
+
 from backend.routes import receipts
-import backend.models  # important
+from backend.routes import evaluation
+from backend.routes import review
 from dotenv import load_dotenv
 load_dotenv()
 
+from backend.db import Base, engine
+import backend.models  # IMPORTANT: ensures tables are registered
 
-app = FastAPI()
-
+# Create DB tables
 Base.metadata.create_all(bind=engine)
 
-app.include_router(receipts.router)
+app = FastAPI(title="Expense Receipt Backend")
 
+# Health check
 @app.get("/")
-def health_check():
+def health():
     return {"status": "ok"}
+
+# Register routers
+app.include_router(receipts.router)
+app.include_router(evaluation.router)
+app.include_router(review.router)
